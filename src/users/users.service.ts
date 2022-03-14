@@ -14,11 +14,20 @@ export class UsersService {
     }
 
     async findOne(email: string): Promise<User>{
-        return await this.usermodel.findOne({email: email});
+        const user = await this.usermodel.findOne({email: email}).exec();
+        return user;
     }
 
     async create(createuser: CreateUserDto): Promise<User>{
         const userNew = new this.usermodel(createuser);
         return userNew.save();
+    }
+
+    async findbyid(id: string): Promise<User>{
+        return await this.usermodel.findById(id).exec();
+    }
+
+    async updateimate(id: string, buffer: string){
+        return await this.usermodel.findByIdAndUpdate(id,{image: buffer}).setOptions({new: true});
     }
 }
