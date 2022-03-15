@@ -30,4 +30,8 @@ export class UsersService {
     async updateimate(id: string, buffer: string){
         return await this.usermodel.findByIdAndUpdate(id,{image: buffer}).setOptions({new: true});
     }
+
+    async findArrUser(userArr){
+        return await this.usermodel.find({id: userArr});
+    }
 }
