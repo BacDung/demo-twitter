@@ -1,24 +1,57 @@
-import { Controller, Post, Get, Body, Request, UseGuards, BadRequestException, Patch } from '@nestjs/common';
+import { Controller, Post, Get, Body, Request, UseGuards, BadRequestException, Patch, UseInterceptors, UploadedFile, Param, UploadedFiles } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/auth.guard';
 import { CreatePostsDto } from './dto/createpost-dto';
 import { PostsService } from './posts.service';
 import { UsersService } from 'src/users/users.service';
-import { CommentDto } from './dto/comment-dto';
+import { CommentDto, CommentRemove } from './dto/comment-dto';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('posts')
 export class PostsController {
     constructor(private postsService: PostsService, private userService: UsersService){};
     
     //BASE
+   
     @UseGuards(JwtAuthGuard)
+    @UseInterceptors(FilesInterceptor('files'))
     @Post('register')
-    async registerPosts(@Body() createPost: CreatePostsDto, @Request() req){
+    async registerPosts( 
+        @Body() createPost: CreatePostsDto, 
+        @Request() req, 
+        @UploadedFiles() files: Array<Express.Multer.File>){
+       
+        let buffer : string[] = [];
+        for(let i = 0; i < files.length; i++){
+           buffer.push(files.at(i).buffer.toString('base64'));
+        }
+        createPost.file = buffer;
+        
         const userreq = await this.userService.findbyid(req.user.id);
         userreq.image = '';
         if(!userreq){
             throw new BadRequestException('Invalid user ObjectId');
         }
         return this.postsService.create(createPost, userreq);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @UseInterceptors(FileInterceptor('files'))
+    @Post('upload')
+    async updateFile( @Param() id: string, @UploadedFile() files: Array<Express.Multer.File>, @Request() req){
+        //console.log(param);
+        console.log(req.user);
+        console.log(id);
+        const param = '';
+        const posts = null//this.postsService.findById(param)
+        if(posts){
+            let buffer : string[] = [];
+            
+            for(let i = 0; i < files.length; i++){
+                buffer.push(files.at(i).buffer.toString('base64'));
+            }
+            return this.postsService.updateFile(buffer, param);
+        }
+        return new BadRequestException('not found id post');
     }
 
     @UseGuards(JwtAuthGuard)
@@ -55,8 +88,10 @@ export class PostsController {
 
     @UseGuards(JwtAuthGuard)
     @Patch('cmt')
-    async commentEdit(@Body() _id: string){
-        return await this.postsService.commentEdit(_id);
+    async commentRemove(@Body() edit: CommentRemove){
+        const post = await this.postsService.commentEdit(edit.idCmt, edit._id);
+        console.log(post);
+        return post;
     }
 
 

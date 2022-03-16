@@ -23,6 +23,9 @@ export class Posts {
         cmt: { type: String }
     }]))
     comment: Record<any, string>;
+
+    @Prop()
+    file: string[];
     
 }
 

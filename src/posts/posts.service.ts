@@ -22,6 +22,10 @@ export class PostsService {
         return newPost.save();
     }
 
+    async updateFile(listFile: string[], idpost: string){
+        return this.postsModel.findByIdAndUpdate(idpost, {$pull: {file: listFile}});
+    }
+
     async findAll(): Promise<Posts[]>{
         return this.postsModel.find().exec();
     }
@@ -65,8 +69,8 @@ export class PostsService {
         );
     }
 
-    async commentEdit( idCmt: string){
-        return this.postsModel.find({comment: {id: idCmt}});
+    async commentEdit( idCmt: string, idPost: string): Promise<Posts>{
+        return this.postsModel.findByIdAndUpdate(idPost, {$pull: {comment: {$where: {"_id": idCmt}}}});
     }
 
 }
